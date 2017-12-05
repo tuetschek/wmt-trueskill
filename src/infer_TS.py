@@ -84,29 +84,6 @@ def parse_csv(fh=sys.stdin):
             sent_sys_rank[sentID].append({'systems': systems, 'ranks': ranks})
     return all_systems, sent_sys_rank
 
-def get_pairranks(rankList):
-    """Given a multi-way ranking, issue 0-1-2 pairwise ranks for all possible pairs
-    (1-2, 1-1, 1-0 based on which system won the pairwise comparison)."""
-    result = []
-    for pair in combinations(rankList, 2):
-        if pair[0] == pair[1]:
-            result.append(1)
-        elif pair[0] > pair[1]:
-            result.append(2)
-        else:
-            result.append(0)
-    return result
-
-def get_pairwise(names, ranks):
-    """Given a multi-way ranking, issue a list of tuples: (sysA-name, sysB-name, (0, 1))
-    where (0, 1) gives the pairwise comparison."""
-    pairname = [n for n in combinations(names, 2)]
-    pairwise = get_pairranks(ranks)
-    pair_result = []
-    for pn, pw in zip(pairname, pairwise):
-        pair_result.append((pn[0], pn[1], pw))
-    return pair_result
-
 def fill_comparisons(all_systems, sent_sys_rank):
     """Convert all multi-way ranking data to freeN-wise comparisons (using all subset
     combinations for all sentences)."""
