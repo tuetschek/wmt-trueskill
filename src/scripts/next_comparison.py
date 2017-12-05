@@ -14,27 +14,32 @@ import math
 import random_sample
 import json
 
-def sort_by_sigma(sys_musigma):
-    sortlist = []
-    for k, v in sys_musigma.items():
-        sig = v[1]
-        sortlist.append((sig, k))
-    sortlist.sort(reverse=True)
-    return sortlist
+def get(ratings, n):
+    """Get the next group of systems to be rated.
+    Select the 1st system as the one with the currently largest sigma, then
+    sample the rest according to a distribution of draw probabilities, where
+    p_draw_ab = 1 / exp(abs(mu_a - mu_b)).
 
-def get(sys_musigma, n):
+    @param ratings: dict of system name -> TrueSkill Rating
+    @param n: number of systems to draw out for comparison
+    @return: a tuple of system names to be compared
+    """
     systems_compared = []
-    sys_a = sort_by_sigma(sys_musigma)[0][1]
+    # select the 1st system -- the one with the largest sigma
+    sys_a = sorted(ratings.items(), key=lambda r: r[1].sigma, reverse=True)[0][0]
     systems_compared.append(sys_a)
+    # establish p_draw against sys_a for all others
     sys_chance = [[], []]
-    for k, v in sys_musigma.items():
+    for k, v in ratings.items():
         if k != sys_a:
             sys_chance[0].append(k)
-            sys_chance[1].append(1./math.exp(abs(sys_musigma[sys_a][0] - sys_musigma[k][0])))
+            sys_chance[1].append(1./math.exp(abs(ratings[sys_a].mu - ratings[k].mu)))
+    # sample n-1 other systems according to p_draw
     while len(systems_compared) != n:
         sys_b = random_sample.choose(sys_chance[0], sys_chance[1])
         systems_compared.append(sys_b)
         systems_compared = list(set(systems_compared))
+    # return the result
     return tuple(set(systems_compared))
 
 if __name__ == '__main__':

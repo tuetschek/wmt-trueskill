@@ -98,13 +98,6 @@ def fill_comparisons(all_systems, sent_sys_rank):
                 comparison_d["_".join(tuple(sorted(set(system_tuple))))].append((system_tuple, rank_tuple))
 
 
-def get_mu_sigma(sys_rate):
-    sys_mu_sigma = {}
-    for k, v in sys_rate.items():
-        sys_mu_sigma[k] = [v.mu, v.sigma*v.sigma]
-    return sys_mu_sigma
-
-
 def sort_by_mu(sys_rate):
     sortlist = []
     for k, v in sys_rate.items():
@@ -155,7 +148,7 @@ def estimate_by_number():
 
         # run TrueSkill
         for num_play in xrange(num_iter):
-            systems_to_compare = scripts.next_comparison.get(get_mu_sigma(system_rating), args.freeN)
+            systems_to_compare = scripts.next_comparison.get(system_rating, args.freeN)
             obs = random.choice(comparison_d["_".join(sorted(systems_to_compare))])  # observation -- randomly choose a sentence (systems, rank)
             systems_name_compared = obs[0]  # actually the same as systems_to_compare, but in different order
             partial_rank = obs[1]  # ranks in the same order as sytems_name_compared
@@ -176,7 +169,7 @@ def estimate_by_number():
 
         # write the resulting mus & sigmas
         f = open(args.prefix + '_mu_sigma.json', 'w')
-        t = get_mu_sigma(system_rating)
+        t = {name: (rating.mu, rating.sigma ** 2) for name, rating in system_rating.iteritems()}
         t['data_points'] = [data_points, args.dp_pct]
         json.dump(t, f)
         f.close()
