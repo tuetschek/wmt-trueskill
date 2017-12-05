@@ -59,8 +59,6 @@ if count_begin > count_end:
 #######################################
 
 comparison_d = defaultdict(list)
-mu_systems = [[], []]
-sigma_systems = [[], []]
 
 
 def parse_csv(fh=sys.stdin):
@@ -86,7 +84,7 @@ def parse_csv(fh=sys.stdin):
     return all_systems, sent_sys_rank
 
 
-def fill_comparisons(all_systems, sent_sys_rank):
+def fill_comparisons(sent_sys_rank):
     """Convert all multi-way ranking data to freeN-wise comparisons (using all subset
     combinations for all sentences). Store this in the global comparison_d variable."""
     sentIDs = sent_sys_rank.keys()
@@ -187,6 +185,6 @@ def estimate_by_number():
 
 if __name__ == '__main__':
     all_systems, sent_sys_rank = parse_csv(open(args.input_file) if args.input_file else sys.stdin)
-    fill_comparisons(all_systems, sent_sys_rank)
+    fill_comparisons(sent_sys_rank)
     estimate_by_number()
 
