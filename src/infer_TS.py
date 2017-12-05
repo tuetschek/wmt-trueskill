@@ -15,12 +15,12 @@ import random
 import json
 import numpy as np
 import math
-import scripts.random_sample
 import scripts.next_comparison
 from itertools import combinations
 from collections import defaultdict
 from csv import DictReader
 from trueskill import *
+from math import factorial
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('prefix', help='output ID (e.g. fr-en0)')
@@ -123,51 +123,54 @@ def get_counts(s_name, c_dict, n_play):
     return c_list.tolist()
 
 
+def comb(n, k):
+    """Combination number"""
+    return factorial(n) / factorial(k) / factorial(n - k)
+
+
 def estimate_by_number():
     #Format of rating by one judgement:
     #  [[r1], [r2], [r3], [r4], [r5]] = rate([[r1], [r2], [r3], [r4], [r5]], ranks=[1,2,3,3,5])
 
     for num_iter_org in num_record:
-        # setting for same number comparison (in terms of # of systems)
-        inilist = [0] * args.freeN
-        data_points = 0
+        # determine how many comparisons to use
         if num_iter_org == 0:
             ### by # of pairwise judgements
             num_rankings = 0
             for key in comparison_d.keys():
                 num_rankings += len(comparison_d[key])
-            data_points = num_rankings / len(list(combinations(inilist, 2))) + 1
+            data_points = num_rankings / comb(args.freeN, 2) + 1
         else:
             data_points = num_iter_org  # by # of matches
         num_iter = int(args.dp_pct * data_points)
         print >> sys.stderr, "Sampling %d / %d pairwise judgments" % (num_iter, data_points)
+        # initialize TrueSkill environment
         param_beta = param_sigma * (num_iter/40.0)
         env = TrueSkill(mu=0.0, sigma=param_sigma, beta=param_beta, tau=param_tau, draw_probability=draw_rate)
         env.make_as_global()
         system_rating = {}
-        num_play = 0
-        counter_dict = defaultdict(int)
+        counter_dict = defaultdict(int)  # keep track of # of comparisons A vs B in here
         for s in all_systems:
             system_rating[s] = Rating()
-        while num_play < num_iter:
-            num_play += 1
-            systems_compared = scripts.next_comparison.get(get_mu_sigma(system_rating), args.freeN)
-            systems_compared =  "_".join(tuple(sorted(systems_compared)))
-            obs = random.choice(comparison_d[systems_compared])    #(systems, rank)
-            systems_name_compared = obs[0]
-            partial_rank = obs[1]
 
-            if args.freeN == 2:
+        # run TrueSkill
+        for num_play in xrange(num_iter):
+            systems_to_compare = scripts.next_comparison.get(get_mu_sigma(system_rating), args.freeN)
+            obs = random.choice(comparison_d["_".join(sorted(systems_to_compare))])  # observation -- randomly choose a sentence (systems, rank)
+            systems_name_compared = obs[0]  # actually the same as systems_to_compare, but in different order
+            partial_rank = obs[1]  # ranks in the same order as sytems_name_compared
+
+            if args.freeN == 2:  # keep track of # of comparisons for heat map
                 if (num_play >= (num_iter * count_begin)) and (num_play <= (num_iter * count_end)):
                     sys_a = obs[0][0]
                     sys_b = obs[0][1]
                     counter_dict[sys_a + '_' + sys_b] += 1
                     counter_dict[sys_b + '_' + sys_a] += 1
 
-            ratings = []
+            ratings = []  # gather current TS rankings for the systems to compare
             for s in systems_name_compared:
                 ratings.append([system_rating[s]])
-            updated_ratings = rate(ratings, ranks=partial_rank)
+            updated_ratings = rate(ratings, ranks=partial_rank)  # update rankings using TS
             for s, r in zip(systems_name_compared, updated_ratings):
                 system_rating[s] = r[0]
 
