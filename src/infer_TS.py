@@ -5,7 +5,7 @@ __author__ = "Keisuke Sakaguchi"
 __version__ = "0.1"
 
 #Input: JUDGEMENTS.csv which must contain one language-pair judgements.
-#Output: *_mu_sigma.json: Mu and Sigma for each system 
+#Output: *_mu_sigma.json: Mu and Sigma for each system
 #        *.count: number of judgements among systems (for generating a heatmap) if -n is set to 2 and -e.
 
 import sys
@@ -24,6 +24,7 @@ from trueskill import *
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('prefix', help='output ID (e.g. fr-en0)')
+arg_parser.add_argument('input_file', nargs='?', help='input file (default to stdin)', type=str)
 arg_parser.add_argument('-n', action='store', dest='freeN', type=int,
         help='Free-for-All N (2-5)', required=True)
 arg_parser.add_argument('-d', action='store', dest='dp', type=int,
@@ -34,7 +35,6 @@ arg_parser.add_argument('-s', dest='num_systems', type=int, default=5,
         help='Number of systems in one ranking in CSV file (default=5)')
 arg_parser.add_argument('-e', dest='heat', default=False, action="store_true",
         help='Produce a file for generating a heatmap (default=False)')
-
 args = arg_parser.parse_args()
 
 #######################################
@@ -62,11 +62,12 @@ comparison_d = defaultdict(list)
 mu_systems = [[], []]
 sigma_systems = [[], []]
 
-def parse_csv():
-    ### Parsing csv file and return system names and rank(1-5) for each sentence
+def parse_csv(fh=sys.stdin):
+    """Parse the WMT-formatted CSV file and return system names and rank(1-5)
+    for each sentence."""
     all_systems = []
     sent_sys_rank = defaultdict(list)
-    for i,row in enumerate(DictReader(sys.stdin)):
+    for i,row in enumerate(DictReader(fh)):
         sentID = int(row.get('segmentId'))
         systems = []
         ranks = []
@@ -141,7 +142,7 @@ def get_counts(s_name, c_dict, n_play):
 def estimate_by_number():
     #Format of rating by one judgement:
     #  [[r1], [r2], [r3], [r4], [r5]] = rate([[r1], [r2], [r3], [r4], [r5]], ranks=[1,2,3,3,5])
-    
+
     for num_iter_org in num_record:
         # setting for same number comparison (in terms of # of systems)
         inilist = [0] * args.freeN
@@ -185,7 +186,7 @@ def estimate_by_number():
             updated_ratings = rate(ratings, ranks=partial_rank)
             for s, r in zip(systems_name_compared, updated_ratings):
                 system_rating[s] = r[0]
-           
+
             if num_play == num_iter:
                 f = open(args.prefix + '_mu_sigma.json', 'w')
                 t = get_mu_sigma(system_rating)
@@ -204,7 +205,7 @@ def estimate_by_number():
                     f.close()
 
 if __name__ == '__main__':
-    all_systems, sent_sys_rank = parse_csv()
+    all_systems, sent_sys_rank = parse_csv(open(args.input_file) if args.input_file else sys.stdin)
     fill_comparisons(all_systems, sent_sys_rank)
     estimate_by_number()
 
