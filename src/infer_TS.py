@@ -171,22 +171,23 @@ def estimate_by_number():
             for s, r in zip(systems_name_compared, updated_ratings):
                 system_rating[s] = r[0]
 
-            if num_play == num_iter:
-                f = open(args.prefix + '_mu_sigma.json', 'w')
-                t = get_mu_sigma(system_rating)
-                t['data_points'] = [data_points, args.dp_pct]
-                json.dump(t, f)
-                f.close()
+        # write the resulting mus & sigmas
+        f = open(args.prefix + '_mu_sigma.json', 'w')
+        t = get_mu_sigma(system_rating)
+        t['data_points'] = [data_points, args.dp_pct]
+        json.dump(t, f)
+        f.close()
 
-                if (args.freeN == 2) and (num_iter_org == num_record[-1]) and args.heat:
-                    f = open(args.prefix + '-' + str(count_begin)+'-'+str(count_end)+'_count.json', 'w')
-                    sys_names = zip(*sort_by_mu(system_rating))[1]
-                    counts = get_counts(sys_names, counter_dict, num_play)
-                    outf = {}
-                    outf['sysname'] = sys_names
-                    outf['counts'] = counts
-                    json.dump(outf, f)
-                    f.close()
+        # write heatmaps
+        if (args.freeN == 2) and (num_iter_org == num_record[-1]) and args.heat:
+            f = open(args.prefix + '-' + str(count_begin) + '-' + str(count_end) + '_count.json', 'w')
+            sys_names = zip(*sort_by_mu(system_rating))[1]
+            counts = get_counts(sys_names, counter_dict, num_play)
+            outf = {}
+            outf['sysname'] = sys_names
+            outf['counts'] = counts
+            json.dump(outf, f)
+            f.close()
 
 if __name__ == '__main__':
     all_systems, sent_sys_rank = parse_csv(open(args.input_file) if args.input_file else sys.stdin)
