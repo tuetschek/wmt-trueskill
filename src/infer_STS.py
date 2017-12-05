@@ -71,7 +71,7 @@ def parse_csv(fh=sys.stdin):
             else:
                 all_systems.append(row.get('system%dId' % num))
             systems.append(row.get('system%dId' % num))
-            ranks.append(int(row.get('system%drank' % num)))
+            ranks.append(float(row.get('system%drank' % num)))
         if -1 in ranks:
             pass
         else:
