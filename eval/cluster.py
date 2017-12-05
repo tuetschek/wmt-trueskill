@@ -134,6 +134,8 @@ if __name__ == '__main__':
 
         if sys_mu_sigma.has_key('data_points'):
             data_points = sys_mu_sigma.pop('data_points')
+        if sys_mu_sigma.has_key('gamma'):
+            sys_mu_sigma.pop('gamma')
 
         systems = sys_mu_sigma.keys()
         ranklist = rank_by_mu(sys_mu_sigma)
@@ -152,7 +154,7 @@ if __name__ == '__main__':
         final_std = np.std(v)
         sys_mu_sigma[k] = (final_mu, final_std)
     sys_mu_sigma = sort_by_mu(sys_mu_sigma)
-    
+
     x = np.arange(1, len(sys_mu_sigma)+1)
     y = []
     yerr = []
