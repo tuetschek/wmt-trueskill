@@ -25,15 +25,15 @@ from trueskill import *
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('prefix', help='output ID (e.g. fr-en0)')
 arg_parser.add_argument('input_file', nargs='?', help='input file (default to stdin)', type=str)
-arg_parser.add_argument('-n', action='store', dest='freeN', type=int,
+arg_parser.add_argument('-n', '--freeN', type=int,
         help='Free-for-All N (2-5)', required=True)
-arg_parser.add_argument('-d', action='store', dest='dp', type=int,
+arg_parser.add_argument('-d', '--dp', type=int,
         help='Number of judgments to use (0 == all)', required=True)
-arg_parser.add_argument('-p', action='store', dest='dp_pct', type=float, default=1.0,
-        help='Percentage of judgments to use (0.9)')
-arg_parser.add_argument('-s', dest='num_systems', type=int, default=5,
+arg_parser.add_argument('-p', '--dp_pct', type=float, default=1.0,
+        help='Percentage of judgments to use (default: 1.0)')
+arg_parser.add_argument('-s', '--num_systems', type=int, default=5,
         help='Number of systems in one ranking in CSV file (default=5)')
-arg_parser.add_argument('-e', dest='heat', default=False, action="store_true",
+arg_parser.add_argument('-e', '--heat', default=False, action="store_true",
         help='Produce a file for generating a heatmap (default=False)')
 args = arg_parser.parse_args()
 
@@ -62,6 +62,7 @@ comparison_d = defaultdict(list)
 mu_systems = [[], []]
 sigma_systems = [[], []]
 
+
 def parse_csv(fh=sys.stdin):
     """Parse the WMT-formatted CSV file and return system names and rank(1-5)
     for each sentence."""
@@ -84,9 +85,10 @@ def parse_csv(fh=sys.stdin):
             sent_sys_rank[sentID].append({'systems': systems, 'ranks': ranks})
     return all_systems, sent_sys_rank
 
+
 def fill_comparisons(all_systems, sent_sys_rank):
     """Convert all multi-way ranking data to freeN-wise comparisons (using all subset
-    combinations for all sentences)."""
+    combinations for all sentences). Store this in the global comparison_d variable."""
     sentIDs = sent_sys_rank.keys()
     for sid in sentIDs:
         for rand_sid in sent_sys_rank[sid]:
@@ -94,6 +96,7 @@ def fill_comparisons(all_systems, sent_sys_rank):
             rank_list = list(combinations(rand_sid['ranks'], args.freeN))
             for system_tuple, rank_tuple in zip(system_list, rank_list):
                 comparison_d["_".join(tuple(sorted(set(system_tuple))))].append((system_tuple, rank_tuple))
+
 
 def get_mu_sigma(sys_rate):
     sys_mu_sigma = {}
