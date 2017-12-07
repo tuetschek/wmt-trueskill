@@ -99,7 +99,7 @@ def compute_gamma(sent_sys_rank):
     return np.var(all_ranks)
 
 
-def estimate_by_number(all_systems, comparison_d, variance):
+def estimate_by_number(all_systems, comparison_d, variance, repetition=None):
 
     for num_iter_org in num_record:
         # determine how many comparisons to use
@@ -109,6 +109,8 @@ def estimate_by_number(all_systems, comparison_d, variance):
         else:
             data_points = num_iter_org  # by # of matches
         num_iter = int(args.dp_pct * data_points)
+        if repetition is not None:
+            print >> sys.stderr, "Run %03d:" % repetition,
         print >> sys.stderr, "Sampling %d / %d pairwise judgments" % (num_iter, data_points)
         # initialize TrueSkill environment
         param_beta = param_sigma * (num_iter / 4000.0)
@@ -128,7 +130,7 @@ def estimate_by_number(all_systems, comparison_d, variance):
             sts.rate_score_based_1vs1(system_rating[sys_a], system_rating[sys_b], score_a - score_b)
 
         # write the resulting mus & sigmas
-        f = open(args.prefix + '_mu_sigma.json', 'w')
+        f = open(args.prefix + ("%03d" % repetition if repetition is not None else "") + '_mu_sigma.json', 'w')
         t = {name: (rating.mu, rating.sigma ** 2) for name, rating in system_rating.iteritems()}
         t['data_points'] = [data_points, args.dp_pct]
         t['gamma'] = variance
@@ -140,4 +142,6 @@ if __name__ == '__main__':
     all_systems, sent_sys_rank = parse_csv(open(args.input_file) if args.input_file else sys.stdin)
     comparison_d = fill_comparisons(sent_sys_rank)
     gamma = compute_gamma(sent_sys_rank)
-    estimate_by_number(all_systems, comparison_d, gamma)
+    for iter_no in xrange(max(1, args.repeat)):
+        random.seed()
+        estimate_by_number(all_systems, comparison_d, gamma, iter_no if args.repeat > 0 else None)
