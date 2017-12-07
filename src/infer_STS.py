@@ -73,10 +73,7 @@ def parse_csv(fh=sys.stdin):
                 all_systems.append(row.get('system%dId' % num))
             systems.append(row.get('system%dId' % num))
             ranks.append(float(row.get('system%drank' % num)))
-        if -1 in ranks:
-            pass
-        else:
-            sent_sys_rank[sentID].append({'systems': systems, 'ranks': ranks})
+        sent_sys_rank[sentID].append({'systems': systems, 'ranks': ranks})
     return all_systems, sent_sys_rank
 
 
