@@ -41,6 +41,8 @@ arg_parser.add_argument('-pdf', dest='pdf', default=False, action='store_true', 
 arg_parser.add_argument('-s', dest='short', default=False, action='store_true', help='shorten name')
 args = arg_parser.parse_args()
 
+ROUND_DIGITS = 7
+
 def shorten_name(s_name):
     return s_name.split('.')[1]
     # Below is for WMT13
@@ -106,8 +108,8 @@ def sort_by_mu(sys_rate):
     return sortlist
 
 def get_min_max(clipped):
-    rank_min = round(clipped[0], 3)
-    rank_max = round(clipped[-1], 3)
+    rank_min = round(clipped[0], ROUND_DIGITS)
+    rank_max = round(clipped[-1], ROUND_DIGITS)
     return rank_min, rank_max
 
 def check_boundary(i, worst_rank, highest_ranks):
@@ -196,29 +198,29 @@ if __name__ == '__main__':
             clipped = sorted(sys_mu[full_name][alpha:-alpha])
 
         n, min_max, mean, var, skew, kurt = stats.describe(datapoints)
-        sys_range = (round(clipped[0], 3), round(clipped[-1], 3))
+        sys_range = (round(clipped[0], ROUND_DIGITS), round(clipped[-1], ROUND_DIGITS))
         sys_range_all.append(sys_range)
 
         if args.by_rank:
             if check_boundary(i, sys_range[1], sys_ranges[0]):
                 boundary = (min(sys_ranges[0][i+1:])+sys_range[1])/2.
                 plt.plot([1, len(sys_mu_sigma)], [boundary, boundary], 'r--', lw=2)
-                print full_name, round(s[0], 3), sys_range
+                print full_name, round(s[0], ROUND_DIGITS), sys_range
                 worst = max(mean + abs(mean - sys_range[0]), worst)
                 print '++++++++++'
 
             else:
-                print full_name, round(s[0], 3), sys_range
+                print full_name, round(s[0], ROUND_DIGITS), sys_range
                 worst = max(sys_range[1], worst)
 
         else:
             if check_boundary(i, sys_range[1], sys_ranges[0]):
                 boundary = (max(sys_ranges[0][i+1:])+sys_range[1])/2.
                 plt.plot([1, len(sys_mu_sigma)], [boundary, boundary], 'r--', lw=2)
-                print full_name, round(s[0], 3), sys_range
+                print full_name, round(s[0], ROUND_DIGITS), sys_range
                 print '++++++++++'
             else:
-                print full_name, round(s[0], 3), sys_range
+                print full_name, round(s[0], ROUND_DIGITS), sys_range
 
         y.append(mean)
         tick_lbs.append(name[0:12])
