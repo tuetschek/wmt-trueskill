@@ -32,13 +32,14 @@ arg_parser.add_argument('-p', '--dp_pct', type=float, default=1.0,
                         help='Percentage of judgments to use (default: 1.0)')
 arg_parser.add_argument('-s', '--num_systems', type=int, default=5,
                         help='Number of systems in one ranking in CSV file (default=5)')
+arg_parser.add_argument('-r', '--repeat', type=int, default=0,
+                        help='Repeat the same process N times (default: 1)')
 args = arg_parser.parse_args()
 
 #######################################
 # Global Variables and Parameters     #
 param_sigma = 0.5
 param_tau = 0.
-draw_rate = 0.25
 
 # You can set arbitrary number(s) for record (dp is the number assigned by -d).
 # num_record = [int(args.dp*0.9), args.dp]
@@ -113,8 +114,8 @@ def estimate_by_number(all_systems, comparison_d, variance):
         num_iter = int(args.dp_pct * data_points)
         print >> sys.stderr, "Sampling %d / %d pairwise judgments" % (num_iter, data_points)
         # initialize TrueSkill environment
-        param_beta = param_sigma * (num_iter / 40.0)
-        sts = ScoreBasedTrueSkill(mu=0.0, sigma=param_sigma, beta=param_beta, tau=param_tau, gamma=gamma, draw_probability=draw_rate)
+        param_beta = param_sigma * (num_iter / 4000.0)
+        sts = ScoreBasedTrueSkill(mu=0.0, sigma=param_sigma, beta=param_beta, tau=param_tau, gamma=gamma)
         system_rating = {}
         for s in all_systems:
             system_rating[s] = sts.create_rating()
